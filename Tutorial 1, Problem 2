@@ -1,0 +1,17 @@
+# Ethylene production using an isothermal PFR
+
+from matplotlib.pylab import solve
+from matplotlib.pylab import solve
+from scipy.integrate import solve_ivp
+import numpy as np
+import matplotlib.pyplot as plt
+
+Target=136e6 
+
+T=1100
+P=608
+X=0.8
+r=0.072
+a=343.3
+
+# Did not bother with unit conversions since for units of time and pressure they cancel out
