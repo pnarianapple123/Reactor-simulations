@@ -1,51 +1,79 @@
 # Ethylene production using an isothermal PFR
 
 from matplotlib.pylab import solve
-from matplotlib.pylab import solve
 from scipy.integrate import solve_ivp
 import numpy as np
 import matplotlib.pyplot as plt
 
-def ethylene_model(v,z):
+def ethylene_model(v,z,T,P):  # z is a vector of molar flow rates [F_A, F_B, F_C]
         F_A=z[0]
         F_B=z[1]
         F_C=z[2]
-        y_A=z[3]
-        y_B=z[4]
-        y_C=z[5]
-    
-        Target=136e6 
-        X=0.8
-        r=0.072
-        a=343.3
-        k=3.073
-    
-        dF_A_dv=-r_A
-        dF_B_dv=r_B
-        dF_C_dv=r_C
+ 
+        r_ref=0.072 # is the (refererence) rate at 1000K (Reference temperature=T_ref=1000K)
+        T_ref=1000 #Kelvin
+        R=8.314 # J/mol-K
 
-        r_B=k*C_B
-        r_C=k*C_C
-        r_A=-k*C_A
 
-        F_tot=F_A+F_B+F_C 
+        k=r_ref*np.exp(a/R*(1/T_ref-1/T)) # Arrhenius equation for rate constant
+
+        F_tot=F_A+F_B+F_C
+        C_tot=P/(R*T)
+        
+        Ci=C_tot*(z/F_tot)*(P/P0)*(T0/T) # concentration of each species using ideal gas law
 
         y_A=F_A/F_tot
         y_B=F_B/F_tot
         y_C=F_C/F_tot
 
-        C_A=F_tot*(y_A)
-        C_B=F_tot*(y_B)
-        C_C=F_tot*(y_C)
+        C_A=C_tot*(y_A)
+        C_B=C_tot*(y_B)
+        C_C=C_tot*(y_C)
 
-        return [dF_A_dv,dF_B_dv,dF_C_dv,y_A,y_B,y_C,X]
+        r_B=-r_A
+        r_C=-r_A
+        r_A=-k*C_A
 
-time_span = (0,3)
+        dF_A_dv=-r_A
+        dF_B_dv=r_B
+        dF_C_dv=r_C
 
-z_0=[154,0,0,1,0,0]
 
-equation=solve(ethylene_model,time_span,z_0)
+        return [dF_A_dv,dF_B_dv,dF_C_dv]
+
+Target=136e6 
+X=0.8
+
+a=343.3
+k=3.073
+P0=608 # pressure in kPa
+T0=1100 #Kelvin
+
+max_vol = 3
+volume_span = (0,max_vol)
+vol_steps = 500
+volume_array = np.linspace(0,max_vol,vol_steps)
+
+# Initial conditions for the molar flow rates 
+F_0 = [192.5,0,0]
+
+# Solve mass balance by integrating the differential equation
+solution = solve_ivp(ethylene_model,t_span=volume_span,y0=F_0,t_eval=volume_array,args=(T,P))
+
 
 
 
 # Did not bother with unit conversions since for units of time and pressure they cancel out
+
+# After running solve_ivp and getting 'equation'
+plt.figure()
+plt.plot(equation.t, equation.y[0], label='F_A (Ethylene)')
+plt.plot(equation.t, equation.y[1], label='F_B')
+plt.plot(equation.t, equation.y[2], label='F_C')
+
+plt.xlabel('Reactor Volume (v)')
+plt.ylabel('Molar Flow Rate (F)')
+plt.title('Ethylene PFR Reactor Profiles')
+plt.legend()
+plt.grid(True)
+plt.show()
