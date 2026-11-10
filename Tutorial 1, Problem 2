@@ -58,7 +58,8 @@ FB = solution.y[1,:]
 FC = solution.y[2,:]
 
 F_tot=FA+FB+FC
-X=1-FA/F_tot
+FA0=F_0[0]
+X=1-FA/FA0
 yi=solution.y/F_tot # y is the mole fraction of each species
 
 print('    {0:12} {1:12} {2:14} {3:12} {4:12} {5:12} {6:12} {7:12} {8:12}'.format('Volume','Conversion','F_A', 'F_B', 'F_C', 'F_tot', 'yi_A', 'yi_B', 'yi_C'))
@@ -126,9 +127,9 @@ ax2.plot(vol,X,'-k',label=r'$X$')
 ax2.plot([V_actual,V_actual],[0,x_target],':k')
 ax2.plot([0,V_actual],[x_target,x_target],':k')
 # Plot the mole fractions of A, B, and C
-ax2.plot(vol,yi_A_actual,'--b',label='yA')
-ax2.plot(vol,yi_B_actual,'--g',label='yB')
-ax2.plot(vol,yi_C_actual,'--r',label='yC')
+ax2.plot(vol,yi[0,:],'--b',label='yA')
+ax2.plot(vol,yi[1,:],'--g',label='yB')
+ax2.plot(vol,yi[2,:],'--r',label='yC')
 ax2.set_xlabel('volume')
 ax2.set_ylabel('mole fraction')
 ax2.legend()
