@@ -5,39 +5,37 @@ from scipy.integrate import solve_ivp
 import numpy as np
 import matplotlib.pyplot as plt
 
-def ethylene_model(v,z,T,P):  # z is a vector of molar flow rates [F_A, F_B, F_C]
-        F_A=z[0]
-        F_B=z[1]
-        F_C=z[2]
+def ethylene_model(v,y,T,P):  # y is a vector of molar flow rates [F_A, F_B, F_C]
+        F_A=y[0]
+        F_B=y[1]
+        F_C=y[2]
  
-        r_ref=0.072 # is the (refererence) rate at 1000K (Reference temperature=T_ref=1000K)
+        k_ref=0.072 # is the (refererence) rate at 1000K (Reference temperature=T_ref=1000K)
         T_ref=1000 #Kelvin
         R=8.314 # J/mol-K
 
+        k=k_ref*np.exp(a/R*(1/T_ref-1/T)) # Arrhenius equation for rate constant
 
-        k=r_ref*np.exp(a/R*(1/T_ref-1/T)) # Arrhenius equation for rate constant
-
-        F_tot=F_A+F_B+F_C
-        C_tot=P/(R*T)
+        F_tot1=F_A+F_B+F_C
+        C_tot1=P/(R*T)
         
-        Ci=C_tot*(z/F_tot)*(P/P0)*(T0/T) # concentration of each species using ideal gas law
+        Ci=C_tot1*(y/F_tot1)*(P/P0)*(T0/T) # concentration of each species using ideal gas law
 
-        y_A=F_A/F_tot
-        y_B=F_B/F_tot
-        y_C=F_C/F_tot
+        y_A=F_A/F_tot1
+        y_B=F_B/F_tot1
+        y_C=F_C/F_tot1
 
-        C_A=C_tot*(y_A)
-        C_B=C_tot*(y_B)
-        C_C=C_tot*(y_C)
+        C_A=Ci[0]
+        C_B=Ci[1]
+        C_C=Ci[2]
 
+        r_A=-k*C_A
         r_B=-r_A
         r_C=-r_A
-        r_A=-k*C_A
-
-        dF_A_dv=-r_A
+        
+        dF_A_dv=r_A
         dF_B_dv=r_B
         dF_C_dv=r_C
-
 
         return [dF_A_dv,dF_B_dv,dF_C_dv]
 
@@ -45,7 +43,6 @@ Target=136e6
 X=0.8
 
 a=343.3
-k=3.073
 P0=608 # pressure in kPa
 T0=1100 #Kelvin
 
@@ -58,7 +55,56 @@ volume_array = np.linspace(0,max_vol,vol_steps)
 F_0 = [192.5,0,0]
 
 # Solve mass balance by integrating the differential equation
-solution = solve_ivp(ethylene_model,t_span=volume_span,y0=F_0,t_eval=volume_array,args=(T,P))
+solution = solve_ivp(ethylene_model,t_span=volume_span,y0=F_0,t_eval=volume_array,args=(T0,P0))
+
+F_tot=solution.y[0,:]+solution.y[1,:]+solution.y[2,:]
+X=1-solution.y[0,:]/F_tot
+yi=solution.y/F_tot # y is the mole fraction of each species
+
+print('    {0:12} {1:12} {2:14} {3:12} {4:12} {5:12} {6:12} {7:12} {8:12}'.format('Volume','Conversion','F_A', 'F_B', 'F_C', 'F_tot', 'yi_A', 'yi_B', 'yi_C'))
+for i in range(vol_steps):
+    print('{0:12.6f} {1:12.6f}  {2:12.6f}  {3:12.6f}  {4:12.6f}  {5:12.6f}  {6:12.6f}  {7:12.6f}  {8:12.6f}'.format(
+        solution.t[i],
+        X[i], 
+        solution.y[0,i],
+        solution.y[1,i],
+        solution.y[2,i],
+        F_tot[i],
+        yi[0,i],
+        yi[1,i],
+        yi[2,i]))
+
+x_target=0.8
+x_diff=np.abs(X-x_target)
+target_index=np.argmin(x_diff)
+V_actual=solution.t[target_index]
+F_A_actual=solution.y[0,target_index]
+F_B_actual=solution.y[1,target_index]
+F_C_actual=solution.y[2,target_index]
+F_tot_actual=F_A_actual+F_B_actual+F_C_actual
+yi_A_actual=F_A_actual/F_tot_actual
+yi_B_actual=F_B_actual/F_tot_actual
+yi_C_actual=F_C_actual/F_tot_actual
+
+print('At the conversion  X={0:7.6f}, the properties are:'.format(x_target))
+print('      - vol = {0:7.6f}'.format(V_actual))
+print('      - F_A = {0:7.6f}'.format(F_A_actual))
+print('      - F_B = {0:7.6f}'.format(F_B_actual))
+print('      - F_C = {0:7.6f}'.format(F_C_actual))
+print('      - y_A = {0:7.6f}'.format(yi_A_actual))
+print('      - y_B = {0:7.6f}'.format(yB_actual))
+print('      - y_C = {0:7.6f}'.format(yC_actual))
+
+# Create a plot object. The size is in inches
+fig=plt.figure(figsize=(10,4))
+
+# Create two subplots in the figure. 
+ax1 = fig.add_subplot(1, 2, 1)
+ax2 = fig.add_subplot(1, 2, 2)
+
+ax1.plot(solution.t, solution.y[0], '-k', Label='F_A (Ethylene)')
+ax1.plot(solution.t, solution.y[1], '--r', Label='F_B')
+ax1.plot(solution.t, solution.y[2], '--b', Label='F_C')
 
 
 
@@ -67,13 +113,33 @@ solution = solve_ivp(ethylene_model,t_span=volume_span,y0=F_0,t_eval=volume_arra
 
 # After running solve_ivp and getting 'equation'
 plt.figure()
-plt.plot(equation.t, equation.y[0], label='F_A (Ethylene)')
-plt.plot(equation.t, equation.y[1], label='F_B')
-plt.plot(equation.t, equation.y[2], label='F_C')
+plt.plot(solution.t, F_tot, '-k', label='F_tot')
+plt.plot(solution.t, solution.y[0], '--r', label='F_A')
+plt.plot(solution.t, solution.y[1], '--b', label='F_B')
+plt.plot(solution.t, solution.y[2], '--g', label='F_C')
+ax1.set_xlabel(r'$\mathrm{Volume}\,/\,{\rm m^3}$',size=16)
+ax1.set_ylabel(r'$F_i$',size=16)
+ax1.set_xlim([0,3])
+ax1.set_ylim([0,400])
+ax1.legend()
 
-plt.xlabel('Reactor Volume (v)')
-plt.ylabel('Molar Flow Rate (F)')
-plt.title('Ethylene PFR Reactor Profiles')
-plt.legend()
-plt.grid(True)
+# Plot conversion
+ax2.plot(solution.t,conversion,'-k',label=r'$X$')
+# Indicate the reactor volume to achieve the target conversion
+ax2.plot([volume_actual,volume_actual],[0,x_target],':k')
+ax2.plot([0,volume_actual],[x_actual,x_actual],':k')
+# Plot the mole fractions of A, B, and C
+ax2.plot(solution.t,y_fraction[0,:],'--b',label=r'$y_\mathrm{A}$')
+ax2.plot(solution.t,y_fraction[1,:],'--g',label=r'$y_\mathrm{B}$')
+ax2.plot(solution.t,y_fraction[2,:],'--r',label=r'$y_\mathrm{C}$')
+ax2.set_xlabel(r'$\mathrm{Volume}\,/\,{\rm m^3}$',size=16)
+ax2.set_ylabel(r'$X,y_i$',size=16)
+ax2.set_xlim([0,3])
+ax2.set_ylim([0,1])
+ax2.legend()
+
+
+# Save figure 
+plt.savefig("ethylene.pdf", bbox_inches='tight')
+# Display figure
 plt.show()
