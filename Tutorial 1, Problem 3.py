@@ -1,14 +1,22 @@
-def ethylene_model(v,z):
-        F_A=z[0]
-        F_B=z[1]
-        F_C=z[2]
-        F_I=z[3]
+from scipy.integrate import solve_ivp
+import numpy as np
+import matplotlib.pyplot as plt
 
-        r_A=kP_A^(1/3)*P_B^(2/3)
+
+def flow_model(v,z,P):
+        FA0=z[0]
+        FB0=z[1]
+        FC0=z[2]
+        FI0=z[3]
+
+        r_A=k*PA**(1/3)*PB**(2/3)
         
+        dFAdV=rA
+        dFBdV=rA*1/2
+        dFCdV=-rA
+        rI=0
+        dFIdV=rI
 
-        F_A=rA
-        F_B=rB
-        F_C=rC
-        F_I=rI
+        return [dFAdV,dFBdV,dFCdV,dFIdV]
+#S0=[0.1362,0.068,0,0.256,1.0]
 
