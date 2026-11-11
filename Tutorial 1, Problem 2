@@ -23,8 +23,6 @@ def ethylene_model(v,y,T,P):  # y is a vector of molar flow rates [F_A, F_B, F_C
         Ci=C_tot1*(y/F_tot1) # concentration of each species using ideal gas law
 
         C_A=Ci[0]
-        C_B=Ci[1]
-        C_C=Ci[2]
 
         r_A=-k*C_A
         r_B=-r_A
@@ -131,7 +129,7 @@ ax2.plot(vol,yi[0,:],'--b',label='yA')
 ax2.plot(vol,yi[1,:],'--g',label='yB')
 ax2.plot(vol,yi[2,:],'--r',label='yC')
 ax2.set_xlabel('volume')
-ax2.set_ylabel('mole fraction')
+ax2.set_ylabel('conversion')
 ax2.legend()
 
 
