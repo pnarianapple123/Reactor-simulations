@@ -8,7 +8,7 @@ FB0=S0[1]
 FC0=S0[2]
 FI0=S0[3]
 Pr=S0[4]
-T0=260+275.5 # K (Isothermal)
+T0=260+273.15 # K (Isothermal)
 P0=10e5 # Pa (Isobaric)
 Ftot0=FA0+FB0+FC0+FI0
 def ethylene_model(W,z,T,P):
@@ -18,7 +18,7 @@ def ethylene_model(W,z,T,P):
         FI=z[3]
         Pr=z[4]
 
-        k=392 # mol(Pa Kg_cat s)^-1
+        k=0.00392/(10**5) # mol(Pa Kg_cat s)^-1
         P=Pr*P0
         R=8.314 # J/mol-K
         Ftot=FA+FB+FC+FI
@@ -47,11 +47,15 @@ def ethylene_model(W,z,T,P):
 
 # Since W is the cumulative weigt of the catalyst down the reator, 
 # I will assume a very large mass value, to ensure that the conversion is reached within the range of the integration.
-W_max=1 # kg 
+W_max=40 # kg 
 W_span=(0,W_max)
 Steps=1000
 W_array=np.linspace(0,W_max,Steps)
 solution = solve_ivp(ethylene_model,t_span=W_span,y0=S0,t_eval=W_array,args=(T0,P0))
+print(solution.success)
+print(solution.message)
+print(solution.t)
+print(solution.y)
 
 W = solution.t
 
@@ -75,6 +79,7 @@ x_diff=np.abs(X-x_target)
 target_index=np.argmin(x_diff)
 W_actual=W[target_index]
 P_final=P[target_index]
+Pr_final=Pr[target_index]
 F_A_final=FA[target_index]
 F_B_final=FB[target_index]
 F_C_final=FC[target_index]
@@ -88,6 +93,7 @@ yi_I_final=F_I_final/F_tot_final
 print('At the conversion  X={0:7.6f}, the properties are:'.format(x_target))
 print('      - W = {0:7.6f}'.format(W_actual))
 print('      - P = {0:7.6f}'.format(P_final))
+print('      - Pr = {0:7.6f}'.format(Pr_final))
 print('      - F_A = {0:7.6f}'.format(F_A_final))
 print('      - F_B = {0:7.6f}'.format(F_B_final))
 print('      - F_C = {0:7.6f}'.format(F_C_final))
@@ -130,11 +136,11 @@ ax2.set_ylim([0,1])
 ax2.legend()
 
 # Plot pressure
-ax3.plot(W,P, '-k', label='P')
+ax3.plot(W,Pr, '-k', label='Pr')
 ax3.set_xlabel('catalyst weight (kg)')
-ax3.set_ylabel('pressure')
+ax3.set_ylabel('pressure ratio')
 ax3.set_xlim([0,W_max])
-ax3.set_ylim([0,10e5])
+ax3.set_ylim([0,1])
 ax3.legend()
 
 # Plot mole fractions
