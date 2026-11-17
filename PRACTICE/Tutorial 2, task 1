@@ -1,0 +1,55 @@
+from scipy.integrate import solve_ivp
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+
+def isom_but(V,z,T):
+    FA=z[0]
+    FB=z[1]
+    FI=z[2]
+    T=z[3]
+
+
+    Hr=-6900  # J mol-1
+    Ea=65.7e-3 # J mol-1
+    CA0=9.3 # mol L-1
+
+
+    CpA=141 # J mol-1 K-1
+    CpB=141 # J mol-1 K-1
+    CpI=161 # J mol-1 K-1
+
+    rI=0
+    T1=360
+    k1=31.1 # h-1
+    R=8.314
+    Kc2=3.03 # At 60 C
+    T2=60+273.15
+    k=k1*exp((-Ea/R)*((1/T)-(1/T1)))
+    Kc=Kc2*exp((-Hr/R)*((1/T)-(1/T2)))
+    v0=(FA0+FB0+FI0)/(CA0+CB+CI0)
+
+    dFAdV=rA
+    dFBdV=rB
+    dFIdV=rI
+    
+    U*a*(T-Ta)==0 # Adiabatic
+    dTdV=((-Hr*-rA)-U*a*(T-Ta))/(FA*CPA+FB*CPB+FI*CPI)
+
+    return [dFAdV,dFBdV,dFIdV,dFIdV,dTdV]
+F=163
+FA0=0.9*F
+FB0=0
+FI0=0.1*F
+z0=FA0+FB0+FI0
+T0=330
+V_max=19 # vol
+V_span=(0,V_max)
+Steps=1000
+V_array=np.linspace(0,V_max,Steps)
+solution = solve_ivp(isom_but,t_span=V_span,y0=z0,t_eval=V_array,args=(T0,))
+print(solution.success)
+print(solution.message)
+print(solution.t)
+print(solution.y)
