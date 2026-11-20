@@ -2,14 +2,11 @@ from scipy.integrate import solve_ivp
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-
 def isom_but(V,z,T):
     FA=z[0]
     FB=z[1]
     FI=z[2]
     T=z[3]
-
 
     Hr=-6900  # J mol-1
     Ea=65.7e-3 # J mol-1
